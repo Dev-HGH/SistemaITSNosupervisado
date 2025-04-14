@@ -49,7 +49,56 @@ class SistemaTransporte:
         """
         X = np.array([[hash(origen), hash(destino), self.grafo[origen][destino]]])
         return self.modelo.predict(X)[0]
+        
+    def encontrar_mejor_ruta(self, inicio, destino):
+        heap = [(0, inicio)]
+        costos = {nodo: float('inf') for nodo in self.grafo}
+        costos[inicio] = 0
+        ruta = {nodo: None for nodo in self.grafo}
 
+        while heap:
+            costo_actual, nodo_actual = heapq.heappop(heap)
+
+            if nodo_actual == destino:
+                break
+
+            for vecino in self.grafo[nodo_actual]:
+                costo = self.grafo[nodo_actual][vecino]
+                nuevo_costo = costo_actual + costo
+                # Verificamos si el nuevo costo es menor al costo actual registrado.
+                if nuevo_costo < costos[vecino]:
+                    costos[vecino] = nuevo_costo
+                    ruta[vecino] = nodo_actual
+                    heapq.heappush(heap, (nuevo_costo, vecino))
+
+        camino = []
+        nodo = destino
+        while nodo:
+            camino.append(nodo)
+            nodo = ruta[nodo]
+        camino.reverse()
+
+        return camino, costos[destino]
+
+# Creamos una instancia del sistema de transporte.
+sistema = SistemaTransporte()
+
+# Entrenamos el modelo de clustering con las conexiones.
+sistema.entrenar_modelo(n_clusters=3)
+
+# Predecimos el cluster de una conexión específica.
+origen = 'A'
+destino = 'B'
+cluster = sistema.predecir_cluster(origen, destino)
+print(f"La conexión de {origen} a {destino} pertenece al cluster {cluster}.")
+
+# Encontramos la mejor ruta entre dos puntos.
+punto_A = 'A'
+punto_B = 'I'
+ruta_optima, costo_total = sistema.encontrar_mejor_ruta(punto_A, punto_B)
+
+print(f"Mejor ruta de {punto_A} a {punto_B}: {' → '.join(ruta_optima)}")
+print(f"Costo total del viaje: {costo_total:.2f} minutos")
 
 
 
